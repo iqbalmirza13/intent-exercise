@@ -1,11 +1,17 @@
 package id.ac.polinema.intentexercise;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.mobsandgeeks.saripaar.ValidationError;
@@ -15,6 +21,7 @@ import com.mobsandgeeks.saripaar.annotation.Email;
 import com.mobsandgeeks.saripaar.annotation.NotEmpty;
 import com.mobsandgeeks.saripaar.annotation.Password;
 
+import java.io.IOException;
 import java.util.List;
 
 public class RegisterActivity extends AppCompatActivity implements Validator.ValidationListener {
@@ -34,6 +41,11 @@ public class RegisterActivity extends AppCompatActivity implements Validator.Val
     @NotEmpty
     private EditText aboutyouInput;
 
+    private ImageView avatarImage;
+    private String image;
+
+    private static final int FOTO_REQUEST_CODE = 1;
+
     private Validator validator;
 
 
@@ -47,6 +59,7 @@ public class RegisterActivity extends AppCompatActivity implements Validator.Val
         confirmpasswordInput = findViewById(R.id.text_confirm_password);
         homepageInput = findViewById(R.id.text_homepage);
         aboutyouInput = findViewById(R.id.text_about);
+        avatarImage = findViewById(R.id.image_profile);
         validator = new Validator(this);
         validator.setValidationListener(this);
 
@@ -58,9 +71,9 @@ public class RegisterActivity extends AppCompatActivity implements Validator.Val
     public static final String CONFIRM_PASSWORD = "confirm password";
     public static final String HOME_PAGE = "home page";
     public static final String ABOUT_YOU = "about you";
+    public static final String IMG_KEY = "image";
 
-    public void handleOke(View view){
-
+    public void handleOk(View view){validator.validate();
     }
 
     public void onValidationSucceeded(){
@@ -77,6 +90,7 @@ public class RegisterActivity extends AppCompatActivity implements Validator.Val
         intent.putExtra(CONFIRM_PASSWORD,confirm_password);
         intent.putExtra(HOME_PAGE, home_page);
         intent.putExtra(ABOUT_YOU, about_you);
+        intent.putExtra(IMG_KEY, image);
         startActivity(intent);
     }
 
@@ -94,5 +108,29 @@ public class RegisterActivity extends AppCompatActivity implements Validator.Val
         }
 
 }
+    public void handleImage(View view) {
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(intent, FOTO_REQUEST_CODE);
+    }
+
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data){
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_CANCELED){
+            return;
+        }
+
+        if (requestCode == FOTO_REQUEST_CODE) {
+            if (data !=null){
+                try {
+                    image=data.getDataString();
+                    Uri imageUri = data.getData();
+                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(),imageUri);
+                    avatarImage.setImageBitmap(bitmap);
+                } catch (IOException e){
+                    Toast.makeText(this, "Can't load image", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+    }
 
 }
